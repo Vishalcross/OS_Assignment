@@ -37,6 +37,7 @@ int main(int argc, char* argv[]){
 				char* command="cut";
 				char* option2="-f1";
 				char* option1="-d:";
+				close(fd[1]);
 				execlp("cut",command,option1,option2,NULL);
 			}	
 		}
