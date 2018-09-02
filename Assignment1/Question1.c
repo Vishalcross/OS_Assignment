@@ -62,7 +62,7 @@ void changeDirectory(int numberOfArgs, char** args){
       if(result == 0){
         printf(ANSI_COLOR_GREEN "directory changed\n"  ANSI_COLOR_RESET);
       }
-      
+
       else{
         switch(errno){
           case EACCES: printf(ANSI_COLOR_RED "Permission denied" ANSI_COLOR_RESET);
@@ -71,15 +71,15 @@ void changeDirectory(int numberOfArgs, char** args){
           break;
           case ENAMETOOLONG: printf(ANSI_COLOR_RED "Path is to long" ANSI_COLOR_RESET);
           break;
-          case ENOTDIR: printf(ANSI_COLOR_RED "A component of path not a directory" ANSI_COLOR_RESET); 
+          case ENOTDIR: printf(ANSI_COLOR_RED "A component of path not a directory" ANSI_COLOR_RESET);
           break;
           case ENOENT: printf( ANSI_COLOR_RED "No such file or directory" ANSI_COLOR_RESET); break;
-          
-          default: printf(ANSI_COLOR_RED "Couldn't change directory to %s" ANSI_COLOR_RESET, args[1] ); 
+
+          default: printf(ANSI_COLOR_RED "Couldn't change directory to %s" ANSI_COLOR_RESET, args[1] );
         }
         printf("\n");
       }
-        
+
     }
 }
 
@@ -95,7 +95,7 @@ void echoFunction(int numberOfArgs, char** args){
         newArgs[numberOfArgs-1] = strtok(newArgs[numberOfArgs-1],"\n");
         newArgs[numberOfArgs] = NULL;
         execvp("/bin/echo",newArgs);
-        
+
         exit(EXIT_SUCCESS);
     }
     else{
@@ -122,7 +122,7 @@ void lsFunction(int numberOfArgs, char** args){
             newArgs[numberOfArgs] = NULL;
             execvp("/bin/ls",newArgs);
         //}
-        
+
         exit(EXIT_SUCCESS);
     }
     else{
@@ -138,12 +138,12 @@ void wcFunction(int numberOfArgs, char** args){
     else if(numberOfArgs == 2){
         // printf("%s %s\n",args[0],args[1]);
         // if(args[1][0] != '-'){
-            
+
             int cid = fork();
-            if(cid == 0){   
+            if(cid == 0){
                 args[1] = strtok(args[1],"\n");
                 execlp("/usr/bin/wc","/usr/bin/wc",args[1],NULL);
-                exit(EXIT_SUCCESS); 
+                exit(EXIT_SUCCESS);
             }
             else{
                 wait(NULL);
@@ -155,10 +155,10 @@ void wcFunction(int numberOfArgs, char** args){
     }
     else if(numberOfArgs == 3){
         int cid = fork();
-            if(cid == 0){   
+            if(cid == 0){
                 args[2] = strtok(args[2],"\n");
                 execlp("/usr/bin/wc","/usr/bin/wc",args[1],args[2],NULL);
-                exit(EXIT_SUCCESS); 
+                exit(EXIT_SUCCESS);
             }
             else{
                 wait(NULL);
@@ -193,20 +193,20 @@ int main(){
         char *temp2 = (char*)malloc(100*sizeof(char));
         memset(temp2,0,sizeof(temp2));
         strcpy(temp2,test);
-       char* temp = strtok(test," ");
+       char* temp = strtok(test," \t");
         int numberOfArgs = 1;
         while(temp != NULL){
-            temp = strtok(NULL," ");
+            temp = strtok(NULL," \t");
             if(temp != NULL)
                 numberOfArgs++;
         }
         printf("No. of Arguments passed is %d\n",numberOfArgs);
-        temp = strtok(temp2," ");
+        temp = strtok(temp2," \t");
         char* args[numberOfArgs];
         int i = 0;
         while(temp != NULL){
             args[i++] = temp;
-            temp = strtok(NULL," ");
+            temp = strtok(NULL," \t");
         }
         if(numberOfArgs == 1){
             if(strcmp(args[0],"\n") == 0)
