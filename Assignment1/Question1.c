@@ -1,3 +1,17 @@
+/********************************************************************************************
+@authors
+Vishal Chokala
+Prateek Gupta
+Tanmay Kulkarni
+Preamble:
+The objective of this program is to create a shell which provides the following functionality
+	1. Changing the directory
+	2. Echo to stdout
+	3. Show contents of the directory
+	4. Word count of files
+Note: Currently this DOES NOT SUPPORT space separated locations
+********************************************************************************************/
+
 #include<stdio.h>
 #include<unistd.h>
 #include<sys/types.h>
@@ -13,14 +27,15 @@
 
 int flag=0;
 void handler(int s){
-    //signal(SIGINT,handler);
+    //Code to handle SIGINT
     printf("\ntype quit to exit %d\n",s);
     flag=1;
-    fflush(stdout);
+    fflush(stdout);//Clear the buffer present in std::out
     return;
 }
 
 void getCurrentDirectory(char* currentDirectory){
+	//Code to obtain the current directory.
     int fd[2];
     pipe(fd);
     int cid = fork();
@@ -45,6 +60,7 @@ void getCurrentDirectory(char* currentDirectory){
 }
 
 void changeDirectory(int numberOfArgs, char** args){
+	//Here we make use of chdir and not cd as cd is not in /usr/bin or in /bin
    if(numberOfArgs == 1){
         char cwd[100];
         memset(cwd,0,sizeof(cwd));
@@ -84,8 +100,8 @@ void changeDirectory(int numberOfArgs, char** args){
 }
 
 void echoFunction(int numberOfArgs, char** args){
+	//Fuction to echo user input to std::out
     int cid = fork();
-    //args[numberOfArgs-1] = NULL;
     if(cid == 0){
 
         char* newArgs[numberOfArgs+1];
@@ -95,7 +111,6 @@ void echoFunction(int numberOfArgs, char** args){
         newArgs[numberOfArgs-1] = strtok(newArgs[numberOfArgs-1],"\n");
         newArgs[numberOfArgs] = NULL;
         execvp("/bin/echo",newArgs);
-
         exit(EXIT_SUCCESS);
     }
     else{
@@ -105,40 +120,30 @@ void echoFunction(int numberOfArgs, char** args){
 }
 
 void lsFunction(int numberOfArgs, char** args){
+	//List the contents of the location specified by the user.
     printf("IN LS\n");
     int cid = fork();
-    //args[numberOfArgs-1] = NULL;
     if(cid == 0){
-        // if(numberOfArgs == 1){
-        //     execlp("/bin/ls","/bin/ls",NULL);
-        // }
-        //else{
-
-            char* newArgs[numberOfArgs+1];
-            for(int i=0;i<numberOfArgs;i++){
-                newArgs[i] = args[i];
-            }
-            newArgs[numberOfArgs-1] = strtok(newArgs[numberOfArgs-1],"\n");
-            newArgs[numberOfArgs] = NULL;
-            execvp("/bin/ls",newArgs);
-        //}
-
+		char* newArgs[numberOfArgs+1];
+		for(int i=0;i<numberOfArgs;i++){
+			newArgs[i] = args[i];
+		}
+		newArgs[numberOfArgs-1] = strtok(newArgs[numberOfArgs-1],"\n");
+		newArgs[numberOfArgs] = NULL;
+		execvp("/bin/ls",newArgs);
         exit(EXIT_SUCCESS);
     }
     else{
         wait(NULL);
-
     }
 }
 
 void wcFunction(int numberOfArgs, char** args){
+	//Word count function.
     if(numberOfArgs == 1){
         printf(ANSI_COLOR_RED "Insufficient number of arguments, include options and/or file\n" ANSI_COLOR_RESET);
     }
     else if(numberOfArgs == 2){
-        // printf("%s %s\n",args[0],args[1]);
-        // if(args[1][0] != '-'){
-
             int cid = fork();
             if(cid == 0){
                 args[1] = strtok(args[1],"\n");
@@ -148,10 +153,6 @@ void wcFunction(int numberOfArgs, char** args){
             else{
                 wait(NULL);
             }
-        // }
-        // else{
-        //     printf(ANSI_COLOR_RED "Incorrect file/directory name format \n" ANSI_COLOR_RESET);
-        // }
     }
     else if(numberOfArgs == 3){
         int cid = fork();

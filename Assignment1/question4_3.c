@@ -1,3 +1,17 @@
+/********************************************************************************************
+@authors
+Vishal Chokala
+Prateek Gupta
+Tanmay Kulkarni
+Preamble:
+The objective of this program is to create an application that is similar to a process 
+manager. It takes the number of times it show processes and how many processes at a time.
+Furhtermore, it gives the option of killing processes bases on user demand.
+WARNING: This program makes use of SIGKILL thus, it does not partake in clean  up. In general,
+it is recommended to use SIGTERM.
+NOTE: This program makes use of signals to communicate between the parent and the child. So, that 
+they wake up each other with the help of a SIGHUP.
+********************************************************************************************/
 #include<stdio.h>
 #include<unistd.h>
 #include<signal.h>
@@ -84,6 +98,7 @@ int main(int argc,char* argv[]){
 			signal(SIGHUP,handler2);
 			for(int i=0;i<val[1];i++){
 				forkIt(val);
+				sleep(val[0]);
 			}
 			kill(getppid(),SIGHUP);
 			sleep(1000);

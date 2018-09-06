@@ -1,3 +1,12 @@
+/********************************************************************************************
+@authors
+Vishal Chokala
+Prateek Gupta
+Tanmay Kulkarni
+Preamble:
+This program searches for the occurences of a particular regular expression and returns the 
+line numbers where matches are found.
+********************************************************************************************/
 #include<stdlib.h>
 #include<unistd.h>
 #include<sys/types.h>
