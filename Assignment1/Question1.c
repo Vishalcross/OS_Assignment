@@ -190,7 +190,6 @@ int main(){
         else{
             fgets(test,sizeof(test),stdin);
         }
-        printf("Got input %d %s\n",count,test);
         char *temp2 = (char*)malloc(100*sizeof(char));
         memset(temp2,0,sizeof(temp2));
         strcpy(temp2,test);
@@ -201,7 +200,6 @@ int main(){
             if(temp != NULL)
                 numberOfArgs++;
         }
-        printf("No. of Arguments passed is %d\n",numberOfArgs);
         temp = strtok(temp2," \t");
         char* args[numberOfArgs];
         int i = 0;
