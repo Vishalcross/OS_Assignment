@@ -8,6 +8,7 @@ Preamble:
   then make the parent sleep for x/3 and the child for y%3 seconds. 
 2. In addition, the numbers extracted should not be a repetition of the previous.
 3. The execution should stop when all the numbers have been extracted.
+WARNING: This has to be compiled with the -lm option to link the math library
 ********************************************************************************************/
 #include<stdio.h>
 #include<unistd.h>
@@ -42,7 +43,7 @@ int main(){
 		close(fd[1]);
 		while(1){
 			if(read(fd[0],&buf,sizeof(int)) <= 0){sleep(1);printf("no input\n");continue;}
-			printf("CHILD %d %d\n",buf,isPrime(buf));if(isPrime(buf)==1)sum+=buf;printf("the sum is:%d",sum);
+			printf("CHILD:%d isPrime:%d\n",buf,isPrime(buf));if(isPrime(buf)==1)sum+=buf;printf("the sum is:%d\n",sum);
 			sleep(buf%3);
 		}
 		printf("Child deleted\n");
@@ -61,8 +62,6 @@ int main(){
 				visited[x] = 1;
 				visited[y] = 1;
 				write(fd[1],&arr[y],sizeof(int));
-				printf("values generated:%d %d\n",arr[x],arr[y]);
-				printf("Parent goes to sleep for %d\n",arr[x]/3);
 				sleep(arr[x]/3);
 			}
 		}
