@@ -1,0 +1,6 @@
+{
+	"file_name": "data.txt",
+	"process_count": 20,
+	"beta": 10,
+	"scheduling_mode": "FCFS"
+}
