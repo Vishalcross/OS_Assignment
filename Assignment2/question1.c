@@ -114,6 +114,7 @@ void getData(event* eventHeap,int* numEvents){
 		perror("File not found");
 		exit(1);
 	}
+
 	char buffer[BUFF_SIZE];
 	while(fgets(buffer,BUFF_SIZE,fp) != NULL){
 		process* tempProcess = (process*)calloc(1,sizeof(process));
@@ -155,6 +156,7 @@ void insertToQueue(node** pointerToHead,node** pointerToTail,process newProcess)
 
 node* deleteFromQueue(node** pointerToHead,node** pointerToTail){
 	node* returnVal;
+
 	if(*pointerToHead == NULL){
 		return NULL;
 	}
@@ -166,21 +168,16 @@ node* deleteFromQueue(node** pointerToHead,node** pointerToTail){
 		return returnVal;
 	}
 	else{
-		returnVal = *pointerToTail;
-		node* iter = *pointerToHead;
-		while(iter->next != *pointerToTail){ // move to the second last element
-			iter = iter->next;
-		}
-		iter->next = NULL;
-		*pointerToTail = iter;
+		returnVal = *pointerToHead;
+		*pointerToHead = (*pointerToHead)->next;
 
 		return returnVal;
 	}
 }
 
-event* createNewEvent(process newProcess,int pid,int time){
+event* createNewEvent(process newProcess,int time){
 	event* newEvent = (event*)calloc(1,sizeof(event));
-	newEvent->pid = pid;
+	newEvent->pid = newProcess.pid;
 
 	if(schedMode == FCFS_CODE){
 		newEvent->type = CPU_BURST_COMPLETE;
@@ -191,7 +188,7 @@ event* createNewEvent(process newProcess,int pid,int time){
 			if(newProcess.cpuTime>TIMEQUANTA){
 				newEvent->type = TIMER_EXPIRED;
 				newEvent->time = time+TIMEQUANTA;
-				processTable[pid].cpuTime -= TIMEQUANTA;
+				processTable[newProcess.pid].cpuTime -= TIMEQUANTA;
 			}
 			else{
 				newEvent->type = CPU_BURST_COMPLETE;
@@ -203,10 +200,12 @@ event* createNewEvent(process newProcess,int pid,int time){
 			newEvent->time = time+newProcess.cpuTime;
 		}
 	}
+
 	return newEvent;
 }
 
 void dispatcher(node** pointerToHead1,node** pointerToTail1,node** pointerToHead2,node** pointerToTail2,int* numEvents,event* eventHeap,int pid,int time){
+
 	if(schedMode == FCFS_CODE){
 		if(cpu == -1){
 			node* ptrProcess = deleteFromQueue(pointerToHead1,pointerToTail1);
@@ -216,12 +215,13 @@ void dispatcher(node** pointerToHead1,node** pointerToTail1,node** pointerToHead
 			}
 			else{
 				// Run the process
-				printf("The process:%d has commenced execution\n",(ptrProcess->prcs).pid);
+				printf("TIME:%d The process:%d has commenced execution and will take %ds\n",time,(ptrProcess->prcs).pid,processTable[(ptrProcess->prcs).pid].cpuTime);
 				cpu = (ptrProcess->prcs).pid;
 			}
-			free(ptrProcess);
-			event* newEvent = createNewEvent(ptrProcess->prcs,pid,time); //Create event according to type, accounted by the global vars
+			event* newEvent = createNewEvent(ptrProcess->prcs,time); //Create event according to type, accounted by the global vars
+
 			insert(*newEvent,eventHeap,numEvents);
+			free(ptrProcess);
 		}
 	}
 	else{
@@ -234,24 +234,27 @@ void dispatcher(node** pointerToHead1,node** pointerToTail1,node** pointerToHead
 					return ;
 				}
 				else{
-					printf("The process:%d has commenced execution\n",(ptrProcess->prcs).pid);
+					printf("TIME:%d The process:%d has commenced execution and will take %ds\n",time,(ptrProcess->prcs).pid,processTable[(ptrProcess->prcs).pid].cpuTime);
 					cpu = (ptrProcess->prcs).pid;
 				}
 			}
 			else{
-				printf("The process:%d has commenced execution\n",(ptrProcess->prcs).pid);
+				printf("TIME:%d The process:%d has commenced execution and will take %ds\n",time,(ptrProcess->prcs).pid,processTable[(ptrProcess->prcs).pid].cpuTime);
 				cpu = (ptrProcess->prcs).pid;
 			}
-			free(ptrProcess);
-			event* newEvent = createNewEvent(ptrProcess->prcs,pid,time); //Create event according to type, accounted by the global vars
+
+			event* newEvent = createNewEvent(ptrProcess->prcs,time); //Create event according to type, accounted by the global vars
 			insert(*newEvent,eventHeap,numEvents);
+			free(ptrProcess);
 		}
 	}
 }
 
 void addProcess(int pid,node** pointerToHead1,node** pointerToTail1,node** pointerToHead2,node** pointerToTail2,int time,event* eventHeap,int* numEvents){
+
 	printf("TIME:%d Adding the process %d from the eventheap to readyQueue\n",time,pid);
 	process newProcess = processTable[pid];
+
 	event* newEvent = NULL;
 	if(schedMode == FCFS_CODE){
 		insertToQueue(pointerToHead1,pointerToTail1,newProcess);
@@ -271,11 +274,33 @@ void addProcess(int pid,node** pointerToHead1,node** pointerToTail1,node** point
 		perror("It seems you have tried to run a functionality that the developers are yet to implement\n");
 		exit(2);
 	}
+}
 
+void printReadyQueue(node* head){
+	printf("The current ready queue contains:\n");
+	node* temp = head;
+
+	while(temp != NULL){
+		printf("Pid:%d ArrivalTime:%d BurstDuration:%d\n",(temp->prcs).pid,(temp->prcs).arrivalTime,(temp->prcs).cpuTime);
+		temp = temp->next;
+	}
+	printf("\n\n");
 }
 
 void processCompletion(int pid,node** pointerToHead1,node** pointerToTail1,node** pointerToHead2,node** pointerToTail2,int time,event* eventHeap,int* numEvents){
-	printf("TIME:%d Process:%d has completed execution\n",time,pid);
+	printf("TIME:%d Process:%d arrived at %d has completed execution\n\n",time,pid,processTable[pid].arrivalTime);
+
+	if(schedMode == MULTQ_CODE){
+		printf("ROUNDROBIN\n");
+		printReadyQueue(*pointerToHead1);
+		printf("FCFS\n");
+		printReadyQueue(*pointerToHead2);
+	}
+	else{
+		printf("FCFS\n");
+		printReadyQueue(*pointerToHead1);
+	}
+
 	cpu = -1;
 	if(schedMode == FCFS_CODE){
 		dispatcher(pointerToHead1,pointerToTail1,NULL,NULL,numEvents,eventHeap,pid,time);
@@ -283,37 +308,24 @@ void processCompletion(int pid,node** pointerToHead1,node** pointerToTail1,node*
 	else if(schedMode == MULTQ_CODE){
 		dispatcher(pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,numEvents,eventHeap,pid,time);
 	}
+
 	process completedProcess = processTable[pid];
 	completedProcess.waitTime += time-completedProcess.arrivalTime;
 }
 
 void bringToBack(int pid,node** pointerToHead1,node** pointerToTail1,node** pointerToHead2,node** pointerToTail2,int time,event* eventHeap,int* numEvents){
+
 	printf("TIME:%d Process:%d has timed out\n",time,pid);
 	cpu = -1;
+	
+	addProcess(pid,pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,time,eventHeap,numEvents);
 	dispatcher(pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,numEvents,eventHeap,pid,time);
 	process premptedProcess = processTable[pid];
 	premptedProcess.waitTime += time-premptedProcess.arrivalTime;
 	premptedProcess.arrivalTime = time;
 }
 
-void printHeap(event* eventHeap,int numEvents){
-	printf("The number of  events:%d\n",numEvents);
-	for(int i = 0;i<numEvents;i++){
-		printf("time:%d pid:%d\n",eventHeap[i].time,eventHeap[i].pid);
-	}
-	printf("***************************************************************************\n");
-	int temp = numEvents;
-	for(int i = 0;i<temp;i++){
-		event tempEvent = delete(eventHeap,&numEvents);
-		printf("time:%d pid:%d elements remaining:%d\n",tempEvent.time,tempEvent.pid,numEvents);
-		// printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-		// for(int j = 0;j<numEvents;j++){
-		// 	printf("time:%d pid:%d\n",eventHeap[j].time,eventHeap[j].pid);
-		// }
-		// printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n\n");
-	}
-	exit(0);
-}
+
 int main(){
 	event eventHeap[MAX];
 	int numEvents = 0;
@@ -331,25 +343,37 @@ int main(){
 	getData(eventHeap,&numEvents);
 
 	int time = 0;
-	// printHeap(eventHeap,numEvents);
+
 
 	while(numEvents>0){
 		event temp = delete(eventHeap,&numEvents);
 		time = temp.time;
+		// printf("TIME:%d The event of type %d regarding pid:%d has arrived\n\n",time,temp.type,temp.pid);
 		switch(temp.type){
-			case NEW_PROCESS:if(schedMode == FCFS_CODE){
-								addProcess(temp.pid,&headOfReadyQueue,&tailOfReadyQueue,NULL,NULL,time,eventHeap,&numEvents);break;
-							}
-							else if(schedMode == MULTQ_CODE){
-								addProcess(temp.pid,&headOfTopQ,&tailOfTopQ,&headOfBottomQ,&tailOfBottomQ,time,eventHeap,&numEvents);break;
-							}
-			case CPU_BURST_COMPLETE:if(schedMode == FCFS_CODE){
-										processCompletion(temp.pid,&headOfReadyQueue,&tailOfReadyQueue,NULL,NULL,time,eventHeap,&numEvents);break;
-									}
-									else if(schedMode == MULTQ_CODE){
-										processCompletion(temp.pid,&headOfTopQ,&tailOfTopQ,&headOfBottomQ,&tailOfBottomQ,time,eventHeap,&numEvents);break;
-									}
-			case TIMER_EXPIRED:bringToBack(temp.pid,&headOfTopQ,&tailOfTopQ,&headOfBottomQ,&tailOfBottomQ,time,eventHeap,&numEvents);break;
+			case NEW_PROCESS:{
+				if(schedMode == FCFS_CODE){
+					addProcess(temp.pid,&headOfReadyQueue,&tailOfReadyQueue,NULL,NULL,time,eventHeap,&numEvents);
+					break;
+				}
+				else if(schedMode == MULTQ_CODE){
+					addProcess(temp.pid,&headOfTopQ,&tailOfTopQ,&headOfBottomQ,&tailOfBottomQ,time,eventHeap,&numEvents);
+					break;
+				}
+			}
+			case CPU_BURST_COMPLETE:{
+				if(schedMode == FCFS_CODE){
+					processCompletion(temp.pid,&headOfReadyQueue,&tailOfReadyQueue,NULL,NULL,time,eventHeap,&numEvents);
+					break;
+				}
+				else if(schedMode == MULTQ_CODE){
+					processCompletion(temp.pid,&headOfTopQ,&tailOfTopQ,&headOfBottomQ,&tailOfBottomQ,time,eventHeap,&numEvents);
+					break;
+				}
+			}
+			case TIMER_EXPIRED:{
+				bringToBack(temp.pid,&headOfTopQ,&tailOfTopQ,&headOfBottomQ,&tailOfBottomQ,time,eventHeap,&numEvents);
+				break;
+			}
 			default: printf("Shit happens nigga\n");
 		}
 	}
