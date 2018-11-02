@@ -1,6 +1,6 @@
 /******************************************************************************************************************************************
  *
- * #ToDo fix the deadlock issue in the code for routine, something is causing others to stall
+ * #ToDo finish resource leak
  *
  ******************************************************************************************************************************************/
 #include<stdio.h>
@@ -20,7 +20,7 @@
 #define ACQUIRETIME 1
 
 sem_t* countingSemaphores[NUMBEROFTYPES];
-int* inUse[NUMBEROFTYPES];
+int inUse[NUMBEROFTYPES];
 sem_t* binSemaphore;
 sem_t* binSemaphore2;
 int status[NUMBEROFTHREADS];
@@ -234,6 +234,7 @@ void routine(void* arg){
 				}
 				else if( (args->resourceValues)[resourceNum]== 0 ){
 					printf("Thread:%d unable to get resource as it is unavailable for resource:",args->threadNum);showResourcetype(resourceNum);
+					printf("Processes using the resource:%d\n",inUse[resourceNum]);
 					count--;
 					visited[resourceNum]=0;
 					value=sem_post(binSemaphore);
