@@ -48,14 +48,14 @@ int* init(int *numberOfTimes, int* timesExecuted, double* retreivalValues){
 	printf("enter the number of times each process should run\n");
 	scanf("%d", numberOfTimes);
 	printf("Enter the inital resource values of each\n");
-	for(int i = 0;i<NUMBEROFTYPES;i++){
+	for(int i = 0;i < NUMBEROFTYPES;i++){
 		scanf("%d", &resourceValues[i]);
 	}
-	for(int i = 0;i<NUMBEROFTHREADS;i++){
+	for(int i = 0;i < NUMBEROFTHREADS;i++){
 		timesExecuted[i] = *numberOfTimes;
 	}
 	printf("Enter the probability of getting back the resource\n");
-	for(int i = 0;i<NUMBEROFTHREADS;i++){
+	for(int i = 0;i < NUMBEROFTHREADS;i++){
 		scanf("%lf", &retreivalValues[i]);
 	}
 	memset(status, 0, sizeof(status));//Initialize the status of all to zero
@@ -66,7 +66,7 @@ int* init(int *numberOfTimes, int* timesExecuted, double* retreivalValues){
 void makeSemaphores(int* resourceValues){
 	// Define the semaphores for each resource
 	int value;
-	for(int i = 0;i<NUMBEROFTYPES;i++){
+	for(int i = 0;i < NUMBEROFTYPES;i++){
 		countingSemaphores[i] = (sem_t*)calloc(1, sizeof(sem_t));
 		if(countingSemaphores[i] == NULL){
 			perror("Dynamic allocation for the semaphore failed\n");
@@ -177,18 +177,18 @@ void giveBackResource(int resourceNum, double retreivalPercent, int* resourceVal
 }
 
 int hasDeadlock(int threadNum, int resourceNum, int** properties, int* resourceValues){
-	int remainingForCurrent = requirement[threadNum]-status[threadNum];
+	int remainingForCurrent = requirement[threadNum] - status[threadNum];
 	int requirementOfOther = 0;
 	int hasResourceOtherWants = 0;
 	int hasResourceTheTargetWants = 0;
 	status[threadNum] += (int)pow(2, resourceNum);//After acquiring the resource
-	for(int i = 0;i<NUMBEROFTHREADS;i++){ // Comparison with all the other players
+	for(int i = 0;i < NUMBEROFTHREADS;i++){ // Comparison with all the other players
 		if(i != threadNum){ // To avoid a deadlock check to itself
-			requirementOfOther = requirement[i]-status[i];
+			requirementOfOther = requirement[i] - status[i];
 			hasResourceOtherWants = status[threadNum]&requirementOfOther;
 			hasResourceTheTargetWants = status[i]&remainingForCurrent;
-			if(hasResourceTheTargetWants>0 && hasResourceOtherWants>0){ // Both covet resources held by the other
-				for(int j = 0;j<NUMBEROFTYPES;j++){ // Check which type of resource has the deadlock
+			if(hasResourceTheTargetWants > 0 && hasResourceOtherWants > 0){ // Both covet resources held by the other
+				for(int j = 0;j < NUMBEROFTYPES;j++){ // Check which type of resource has the deadlock
 					int type = (int)pow(2, j);
 					if(hasResourceTheTargetWants%type == 0 && resourceValues[j] == 0){
 						status[threadNum] -= (int)pow(2, resourceNum);
@@ -211,7 +211,7 @@ void stopExec(int resourceNum, int* resourceValues ){
 }
 
 void handleDeadlock(int threadNum, int* resourceValues){
-	for(int i = 0;i<NUMBEROFTYPES;i++){
+	for(int i = 0;i < NUMBEROFTYPES;i++){
 		if(hasType(threadNum, i) == 1){
 			resourceValues[i]++;
 			inUse[i]--;
@@ -230,7 +230,7 @@ void routine(void* arg){
 	memset(visited, 0, sizeof(visited));
 
 	int count = 0, deadlocked = 0;
-	while(count<size){
+	while(count < size){
 		printf("Trying the semaphore of Thread:%d\n", args->threadNum);
 		value = sem_wait(binSemaphore);
 		waitFail(value, "wait failed for binary semaphore\n");
@@ -268,7 +268,7 @@ void routine(void* arg){
 		value = sem_wait(binSemaphore);
 		waitFail(value, "wait failed for binary semaphore\n");
 		int resourceNum = 0;
-		for(int i = 0;i<size;i++){
+		for(int i = 0;i < size;i++){
 			resourceNum = args->properties[args->threadNum][i];
 			giveBackResource(resourceNum, args->retreivalValues[args->threadNum], args->resourceValues, args->threadNum);
 		}
@@ -293,8 +293,8 @@ void routine(void* arg){
 }
 
 void getRequirements(int** properties, int* sizes){
-	for(int i = 0;i<NUMBEROFTHREADS;i++){
-		for(int j = 0;j<sizes[i];j++){
+	for(int i = 0;i < NUMBEROFTHREADS;i++){
+		for(int j = 0;j < sizes[i];j++){
 			requirement[i] += (int)pow(2, properties[i][j]);
 		}
 	}
@@ -334,7 +334,7 @@ int main(){
 	makeSemaphores(resourceValues);
 	arglist* temp;
 	pthread_t threadList[NUMBEROFTHREADS];
-	for(int i = 0;i<NUMBEROFTHREADS;i++){
+	for(int i = 0;i < NUMBEROFTHREADS;i++){
 		temp = (arglist*)calloc(1, sizeof(arglist)); //Initialize the struct
 		initArgList(temp, i, resourceValues, timesExecuted, properties, sizes, retreivalValues);
 		value = pthread_create(&threadList[i], NULL, (void*)routine, (void*)temp);
@@ -345,7 +345,7 @@ int main(){
 	}
 
 	printf("Main:Threads have been spawned successfully...\n Waiting for execution to complete\n\n");
-	for(int i = 0;i<NUMBEROFTHREADS;i++){
+	for(int i = 0;i < NUMBEROFTHREADS;i++){
 		pthread_join(threadList[i], NULL);
 	}
 	printf("execution was successful\n");
