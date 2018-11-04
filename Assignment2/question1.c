@@ -317,7 +317,7 @@ void bringToBack(int pid,node** pointerToHead1,node** pointerToTail1,node** poin
 
 	printf("TIME:%d Process:%d has timed out\n",time,pid);
 	cpu = -1;
-	
+
 	addProcess(pid,pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,time,eventHeap,numEvents);
 	dispatcher(pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,numEvents,eventHeap,pid,time);
 	process premptedProcess = processTable[pid];
