@@ -36,6 +36,7 @@ typedef struct ArgumentList{
 	double* retreivalValues;
 }arglist;
 
+
 int* init(int *numberOfTimes, int* timesExecuted, double* retreivalValues){
 	// Define the number of times each process should run and the initial values for each resource.
 	printf("Obtaining input from the user...\n\n");
@@ -61,6 +62,7 @@ int* init(int *numberOfTimes, int* timesExecuted, double* retreivalValues){
 	printf("\nObtained the intput. Commencing the next stage.....\n\n");
 	return resourceValues;
 }
+
 void makeSemaphores(int* resourceValues){
 	// Define the semaphores for each resource
 	int value;
@@ -99,6 +101,7 @@ void makeSemaphores(int* resourceValues){
 		exit(1);
 	}
 }
+
 int hasType(int resourceNum, int threadNum){
 		int type = (int)pow(2, resourceNum);
 		if(status[threadNum]%type == 0){
@@ -108,6 +111,7 @@ int hasType(int resourceNum, int threadNum){
 			return 0;
 		}
 }
+
 void showResourcetype(int resourceNum){
 	switch(resourceNum){
 		case 0:printf("A\n");break;
@@ -116,22 +120,26 @@ void showResourcetype(int resourceNum){
 		case 3:printf("D\n");break;
 	}
 }
+
 void waitFail(int value, char* string){
 	if(value != 0){
 		perror(string);
 		exit(2);
 	}
 }
+
 void sigFail(int value, char* string){
 	if(value != 0){
 		perror(string);
 		exit(2);
 	}
 }
+
 int generateRandom(int range, int lowerBound){
 	srand(time(NULL));
 	return lowerBound+rand()%range;
 }
+
 void getResource(int resourceNum, int* resourceValues, int threadNum){
 	// Obtain a resource
 	int value;
@@ -150,6 +158,7 @@ void getResource(int resourceNum, int* resourceValues, int threadNum){
 	value = sem_post(binSemaphore2);
 	sigFail(value, "signal failed for binary semaphore for resource\n");
 }
+
 void giveBackResource(int resourceNum, double retreivalPercent, int* resourceValues, int threadNum){
 	//give back the resource
 	int randNum, value;
@@ -166,6 +175,7 @@ void giveBackResource(int resourceNum, double retreivalPercent, int* resourceVal
 	value = sem_post(binSemaphore2);
 	sigFail(value, "signal failed for binary semaphore for resource\n");
 }
+
 int hasDeadlock(int threadNum, int resourceNum, int** properties, int* resourceValues){
 	int remainingForCurrent = requirement[threadNum]-status[threadNum];
 	int requirementOfOther = 0;
@@ -191,6 +201,7 @@ int hasDeadlock(int threadNum, int resourceNum, int** properties, int* resourceV
 	status[threadNum] -= (int)pow(2, resourceNum);
 	return 0; // No deadlock
 }
+
 void stopExec(int resourceNum, int* resourceValues ){
 	if(inUse[resourceNum] == 0 && resourceValues[resourceNum] == 0){
 		printf("Unable to complete execution as we have run out of resource:");
@@ -198,6 +209,7 @@ void stopExec(int resourceNum, int* resourceValues ){
 		exit(3);
 	}
 }
+
 void handleDeadlock(int threadNum, int* resourceValues){
 	for(int i = 0;i<NUMBEROFTYPES;i++){
 		if(hasType(threadNum, i) == 1){
@@ -207,6 +219,7 @@ void handleDeadlock(int threadNum, int* resourceValues){
 		}
 	}
 }
+
 void routine(void* arg){
 	// Stuff that should execute for each process
 	int value;
@@ -278,6 +291,7 @@ void routine(void* arg){
 		pthread_join(thread, NULL);
 	}
 }
+
 void getRequirements(int** properties, int* sizes){
 	for(int i = 0;i<NUMBEROFTHREADS;i++){
 		for(int j = 0;j<sizes[i];j++){
@@ -285,6 +299,7 @@ void getRequirements(int** properties, int* sizes){
 		}
 	}
 }
+
 void initArgList(arglist* temp, int threadNum, int* resourceValues, int* timesExecuted, int** properties, int* sizes, double* retreivalValues){
 	printf("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 	printf("Initializing the argument list...\n");
@@ -297,6 +312,7 @@ void initArgList(arglist* temp, int threadNum, int* resourceValues, int* timesEx
 	printf("Initilization successfull..\n\n");
 	printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 }
+
 int main(){
 	// Properties of each thread
 	int property1[] = {0, 1, 2};
