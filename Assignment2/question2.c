@@ -143,18 +143,20 @@ int generateRandom(int range, int lowerBound){
 void getResource(int resourceNum, int* resourceValues, int threadNum){
 	// Obtain a resource
 	int value;
-	printf("Thread %d trying to obtain resource:", threadNum);showResourcetype(resourceNum);
+	printf("Thread %d trying to obtain resource:", threadNum);
+	showResourcetype(resourceNum);
 	value = sem_wait(binSemaphore2); // Only one can remove or add a resource
 	waitFail(value, "wait failed for binary semaphore for resource\n");
-		value = sem_wait(countingSemaphores[resourceNum]);
-		waitFail(value, "wait failed for counting semaphore\n");
-			inUse[resourceNum]++; // To tell how many are currently using the resource
-			resourceValues[resourceNum]--;
-			sleep(ACQUIRETIME);
-			printf("Thread %d successfully obtained resource:", threadNum);showResourcetype(resourceNum);
-			status[threadNum] += (int)pow(2, resourceNum);
-		value = sem_post(countingSemaphores[resourceNum]);
-		sigFail(value, "signal failed for counting semaphore\n");
+	value = sem_wait(countingSemaphores[resourceNum]);
+	waitFail(value, "wait failed for counting semaphore\n");
+	inUse[resourceNum]++; // To tell how many are currently using the resource
+	resourceValues[resourceNum]--;
+	sleep(ACQUIRETIME);
+	printf("Thread %d successfully obtained resource:", threadNum);
+	showResourcetype(resourceNum);
+	status[threadNum] += (int)pow(2, resourceNum);
+	value = sem_post(countingSemaphores[resourceNum]);
+	sigFail(value, "signal failed for counting semaphore\n");
 	value = sem_post(binSemaphore2);
 	sigFail(value, "signal failed for binary semaphore for resource\n");
 }
@@ -236,29 +238,30 @@ void routine(void* arg){
 		waitFail(value, "wait failed for binary semaphore\n");
 		printf("Thread:%d entered the deadlock check\n", args->threadNum);
 		int resourceNum = generateRandom(size, 0);
-			if(visited[resourceNum] == 0){
-				count++;
-				visited[resourceNum] = 1;
-				stopExec(resourceNum, args->resourceValues);
-				if(hasDeadlock(args->threadNum, resourceNum, args->properties, args->resourceValues) == 1){
-					handleDeadlock(args->threadNum, args->resourceValues); //Release all the resources held
-					printf("Thread:%d encountered deadlock\n", args->threadNum);
-					deadlocked = 1;
-					break;
-				}
-				else if( (args->resourceValues)[resourceNum] ==  0 ){
-					printf("Thread:%d unable to get resource as it is unavailable for resource:", args->threadNum);showResourcetype(resourceNum);
-					printf("Processes using the resource:%d\n", inUse[resourceNum]);
-					count--;
-					visited[resourceNum] = 0;
-					value = sem_post(binSemaphore);
-					sigFail(value, "signal failed for binary semaphore\n");
-					continue;
-				}
-				else{
-					getResource(resourceNum, args->resourceValues, args->threadNum);
-				}
+		if(visited[resourceNum] == 0){
+			count++;
+			visited[resourceNum] = 1;
+			stopExec(resourceNum, args->resourceValues);
+			if(hasDeadlock(args->threadNum, resourceNum, args->properties, args->resourceValues) == 1){
+				handleDeadlock(args->threadNum, args->resourceValues); //Release all the resources held
+				printf("Thread:%d encountered deadlock\n", args->threadNum);
+				deadlocked = 1;
+				break;
 			}
+			else if( (args->resourceValues)[resourceNum] ==  0 ){
+				printf("Thread:%d unable to get resource as it is unavailable for resource:", args->threadNum);
+				showResourcetype(resourceNum);
+				printf("Processes using the resource:%d\n", inUse[resourceNum]);
+				count--;
+				visited[resourceNum] = 0;
+				value = sem_post(binSemaphore);
+				sigFail(value, "signal failed for binary semaphore\n");
+				continue;
+			}
+			else{
+				getResource(resourceNum, args->resourceValues, args->threadNum);
+			}
+		}
 		printf("Thread:%d exiting the deadlock check\n", args->threadNum);
 		value = sem_post(binSemaphore);
 		sigFail(value, "signal failed for binary semaphore\n");
