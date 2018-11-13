@@ -1,6 +1,6 @@
 {
 	"file_name": "data.txt",
-	"process_count": 20,
+	"process_count": 5,
 	"beta": 10,
 	"scheduling_mode": "MULTQ"
 }

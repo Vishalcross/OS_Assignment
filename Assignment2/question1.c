@@ -8,6 +8,7 @@
 #define NEW_PROCESS 0
 #define CPU_BURST_COMPLETE 1
 #define TIMER_EXPIRED 2
+#define CANCELED -1
 #define BUFF_SIZE 10
 #define FCFS "FCFS"
 #define MULTQ "MULTQ"
@@ -153,6 +154,19 @@ void insertToQueue(node** pointerToHead,node** pointerToTail,process newProcess)
 		*pointerToTail = (*pointerToTail)->next;
 	}
 }
+void addToStart(node** pointerToHead,node** pointerToTail,process newProcess){
+	node* temp=(node*)calloc(1,sizeof(node));
+	temp->prcs=newProcess;
+	temp->next=NULL;
+	if(*pointerToHead==NULL){	
+		*pointerToHead=temp;
+		*pointerToTail=*pointerToHead;
+	}
+	else{
+		temp->next=*pointerToHead;
+		*pointerToHead=temp;
+	}
+}
 
 node* deleteFromQueue(node** pointerToHead,node** pointerToTail){
 	node* returnVal;
@@ -217,6 +231,7 @@ void dispatcher(node** pointerToHead1,node** pointerToTail1,node** pointerToHead
 				// Run the process
 				printf("TIME:%d The process:%d has commenced execution and will take %ds\n",time,(ptrProcess->prcs).pid,processTable[(ptrProcess->prcs).pid].cpuTime);
 				cpu = (ptrProcess->prcs).pid;
+				processTable[cpu].waitTime+=time-processTable[cpu].arrivalTime; // updated the wait time as we got the cpu
 			}
 			event* newEvent = createNewEvent(ptrProcess->prcs,time); //Create event according to type, accounted by the global vars
 
@@ -224,7 +239,7 @@ void dispatcher(node** pointerToHead1,node** pointerToTail1,node** pointerToHead
 			free(ptrProcess);
 		}
 	}
-	else{
+	else{ // for MULTQ
 		if(cpu == -1){
 			node* ptrProcess = deleteFromQueue(pointerToHead1,pointerToTail1);
 			if(ptrProcess == NULL){
@@ -236,16 +251,36 @@ void dispatcher(node** pointerToHead1,node** pointerToTail1,node** pointerToHead
 				else{
 					printf("TIME:%d The process:%d has commenced execution and will take %ds\n",time,(ptrProcess->prcs).pid,processTable[(ptrProcess->prcs).pid].cpuTime);
 					cpu = (ptrProcess->prcs).pid;
+					processTable[cpu].waitTime+=time-processTable[cpu].arrivalTime; // updated the wait time as we got cpu
+					processTable[cpu].arrivalTime=time; // so as to account for the runtime in case it gets preempted
 				}
 			}
 			else{
 				printf("TIME:%d The process:%d has commenced execution and will take %ds\n",time,(ptrProcess->prcs).pid,processTable[(ptrProcess->prcs).pid].cpuTime);
 				cpu = (ptrProcess->prcs).pid;
+				processTable[cpu].waitTime+=time-processTable[cpu].arrivalTime; // update the wait time as we get the cpu
 			}
 
 			event* newEvent = createNewEvent(ptrProcess->prcs,time); //Create event according to type, accounted by the global vars
 			insert(*newEvent,eventHeap,numEvents);
 			free(ptrProcess);
+		}
+		else{
+			process runningProcess=processTable[cpu];
+			if(runningProcess.cpuTime>BURST_LIMIT && processTable[pid].cpuTime<=BURST_LIMIT){ // preempting the running
+				for(int i=0;i<*numEvents;i++){
+					if(eventHeap[i].pid==cpu){ //find the cpu completion event
+						eventHeap[i].type=CANCELED; // cancel the event
+						break;
+					}
+				}
+				printf("TIME:%d The process:%d has been prempted\n",time,cpu);
+				processTable[cpu].cpuTime-=time-processTable[cpu].arrivalTime;//This is only in the case of fcfs processes as we update when we schedule them
+				processTable[cpu].arrivalTime=time; // so as to update the arrival time to the time of interrupt
+				addToStart(pointerToHead2,pointerToTail2,processTable[cpu]);
+				cpu=-1;
+				dispatcher(pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,numEvents,eventHeap,pid,time); // we run the dispatcher to run the new process
+			}
 		}
 	}
 }
@@ -308,9 +343,6 @@ void processCompletion(int pid,node** pointerToHead1,node** pointerToTail1,node*
 	else if(schedMode == MULTQ_CODE){
 		dispatcher(pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,numEvents,eventHeap,pid,time);
 	}
-
-	process completedProcess = processTable[pid];
-	completedProcess.waitTime += time-completedProcess.arrivalTime;
 }
 
 void bringToBack(int pid,node** pointerToHead1,node** pointerToTail1,node** pointerToHead2,node** pointerToTail2,int time,event* eventHeap,int* numEvents){
@@ -320,12 +352,25 @@ void bringToBack(int pid,node** pointerToHead1,node** pointerToTail1,node** poin
 
 	addProcess(pid,pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,time,eventHeap,numEvents);
 	dispatcher(pointerToHead1,pointerToTail1,pointerToHead2,pointerToTail2,numEvents,eventHeap,pid,time);
-	process premptedProcess = processTable[pid];
-	premptedProcess.waitTime += time-premptedProcess.arrivalTime;
-	premptedProcess.arrivalTime = time;
+	processTable[pid].arrivalTime = time;
 }
 
-
+void averageWaitTime(){
+	double value=0;
+	for(int i=0;i<PROCESS_COUNT;i++){
+		value+=processTable[i].waitTime;
+	}
+	if(PROCESS_COUNT==0){
+		printf("No Processes present\n");
+	}
+	else{
+		value/=PROCESS_COUNT;
+		printf("\n\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+		printf("The Average wait time is\n");
+		printf("%lf\n",value);
+		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+	}
+}
 int main(){
 	event eventHeap[MAX];
 	int numEvents = 0;
@@ -374,9 +419,10 @@ int main(){
 				bringToBack(temp.pid,&headOfTopQ,&tailOfTopQ,&headOfBottomQ,&tailOfBottomQ,time,eventHeap,&numEvents);
 				break;
 			}
-			default: printf("Shit happens nigga\n");
+			default: printf("!!!!WARNING:Obtained a deleted element!!!!!\n");
 		}
 	}
 
+	averageWaitTime();
 	return 0;
 }
